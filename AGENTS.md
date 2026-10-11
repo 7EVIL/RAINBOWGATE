@@ -30,6 +30,8 @@ Before doing Unreal work, verify the connection:
 Test-NetConnection 127.0.0.1 -Port 8010
 ```
 
+If port `8010` is not reachable and the user asks to fix the MCP connection, launch LUCID with the MCP-enabled command above, wait for the editor/server to come up, then re-run the connection and MCP toolset checks. If the latest log shows `LogModelContextProtocol: Starting MCP server on port 8010` but the editor exits before the port stays reachable, inspect the newest `Saved/Logs/LUCID*.log` for the startup failure and report that exact blocker instead of repeating port checks. Do not fall back to non-Unreal file edits for Unreal asset work unless the user explicitly changes the allowed workflow.
+
 Then verify MCP `initialize`, `tools/list`, and `list_toolsets` before writing assets.
 Expected toolsets include:
 
