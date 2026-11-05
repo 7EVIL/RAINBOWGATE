@@ -72,3 +72,17 @@ Validated on 2026-10-05:
   - `.codex/config.toml`
   - isolated smoke assets under `Content/AI_MCP_Smoke/`
 - Do not include generated or unrelated project content by accident.
+
+
+## agy / Point Rules (override anything above)
+
+- Work on LUCID (`C:\WORK\RAINBOWGATE`) only. Never touch VRGK or its `mcp-unreal` MCP; use `lucid-unreal` (ue-mcp, ws 51348) / `lucid-unreal-epic` (http 8010).
+- Never `git commit`, never touch `git stash`. Run `git status` first; leave unrelated changes alone.
+- Back up only files being changed to `Saved\Backup\<name>_<timestamp>` before editing.
+- Never copy uassets from stash or backups.
+- Prefer Blueprint over C++/scripts.
+- Don't edit structs/enums while the editor is open.
+- Debug logs: Output Log only, with a consistent prefix (e.g. `[LUCID]`).
+- No fog.
+- Never print, store, screenshot, or commit API keys.
+- If the editor or MCP bridge is unreachable, stop and report; don't launch the editor unless asked.
