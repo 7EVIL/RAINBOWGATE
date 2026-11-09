@@ -101,3 +101,35 @@ UnrealEditor-Cmd.exe C:/WORK/RAINBOWGATE/LUCID.uproject -run=GatherText -config=
 - `Content/Localization/Game/zh-Hans/Game.locres`
 - `Content/Localization/Game/Game.locmeta` (regen)
 - `docs/LUCID_Language_Switch_Fix.md` (ไฟล์นี้)
+## Packaged production investigation and fix — 2026-11-07 (ICT)
+
+Proven cause: the previous production pak and UFS manifest contained only Game/en/Game.locres. Source Thai/Chinese resources existed. Config/DefaultGame.ini already requested All ICU and multiple cultures; no Blueprint translation changes were required.
+
+The exact original en-only launcher/CLI override could not be recovered: the previous AutomationTool log had been overwritten by Turnkey VerifySdk. Do not claim an identified historical profile. Fix: use an explicit reproducible production staging command instead of relying on an unknown launch selection.
+
+Run from project root (close production game first):
+
+    powershell -NoProfile -ExecutionPolicy Bypass -File Tools/StageProductionLanguages.ps1
+
+Effective UE5.8 command:
+
+    RunUAT.bat BuildCookRun -project=C:/WORK/RAINBOWGATE/LUCID.uproject -noP4 -platform=Win64 -clientconfig=Shipping -skipbuild -skipcook -stage -pak -iostore -package -compressed -distribution -prereqs -NoCleanStage -IgnorePaksFromDifferentCookSource -CookCultures=en+th+zh-Hans -I18NPreset=All -utf8output -unattended
+
+Important: BuildCookRun.Automation.cs overrides ProjectParams culture parsing and splits CookCultures on PLUS. Do not use comma or semicolon for this BuildCookRun invocation. Existing pak timestamps can also cause container reuse; IgnorePaksFromDifferentCookSource forces regeneration. NoCleanStage preserves unrelated stage files. UnrealPak rejects an existing output pak on this installation; the script preserves previous containers under Saved/Backup before regeneration, not deleting caches or saves.
+
+Result: Shipping incremental restage/package succeeded, AutomationTool exit 0. Reused current cooked Settings (2026-11-07 08:16:51 ICT, newer than source asset). No compile/full recook, BP edits, RHI changes, Steam upload, commit or stash.
+
+Proof in Saved/StagedBuilds/Windows/Manifest_UFSFiles_Win64.txt lines 4606-4608 and actual LUCID-Windows.pak:
+- en/Game.locres: 316347 bytes
+- th/Game.locres: 374440 bytes
+- zh-Hans/Game.locres: 300690 bytes
+
+Extracted ONLY these three locres for validation; all three SHA256 hashes match source compiled resources byte-for-byte. ICU th.res / zh_Hans.res and Thai dictionary are present in the pak.
+
+Build: C:/WORK/RAINBOWGATE/Saved/StagedBuilds/Windows/LUCID.exe
+Backup: Saved/Backup/PackagedLanguages_20261107_144211 (previous doc and PreviousPaks)
+Build log: Saved/Logs/PackagedLanguages_Restage.log
+
+Runtime: production launched without RHI/culture overrides. Automated menu Apply interaction is not available through the editor-only bridge; full en -> th -> zh-Hans -> en Apply verification remains a manual test in this packaged executable. Do not equate archive verification with live UI success.
+
+Boot observation at 2026-11-07 14:45:52 ICT: Shipping PID 39192, alive 34 seconds, Responding=True, window title LUCID. Left running for manual Apply verification. No packaged Shipping log was emitted in LocalAppData/LUCID/Saved/Logs; menu arrival and live language changes are not asserted.
